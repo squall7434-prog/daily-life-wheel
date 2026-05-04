@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="明日生活輪盤">
+  <rect width="512" height="512" rx="96" fill="#121419"/>
+  <circle cx="256" cy="256" r="168" fill="#1b2028" stroke="#c9a46a" stroke-width="18"/>
+  <path d="M256 88a168 168 0 0 1 145.5 84L256 256Z" fill="#c9a46a"/>
+  <path d="M401.5 172A168 168 0 0 1 256 424V256Z" fill="#7fc99b"/>
+  <path d="M256 424A168 168 0 0 1 110.5 172L256 256Z" fill="#d88989"/>
+  <circle cx="256" cy="256" r="58" fill="#f4efe7"/>
+  <path d="M256 138l24 118h-48z" fill="#121419"/>
+  <circle cx="256" cy="256" r="22" fill="#121419"/>
+</svg>

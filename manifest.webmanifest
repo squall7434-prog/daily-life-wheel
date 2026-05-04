@@ -1,0 +1,19 @@
+{
+  "name": "明日生活輪盤",
+  "short_name": "生活輪盤",
+  "description": "今晚抽一次，明天少煩惱。單機版每日生活任務輪盤。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#121419",
+  "theme_color": "#121419",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

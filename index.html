@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>明日生活輪盤</title>
+  <meta name="theme-color" content="#121419">
+  <meta name="description" content="今晚抽一次，明天少煩惱。單機版每日生活任務輪盤。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #121419;
+      --panel: #1b2028;
+      --panel-soft: #222934;
+      --text: #f4efe7;
+      --muted: #b8b0a4;
+      --line: rgba(255, 255, 255, 0.11);
+      --primary: #c9a46a;
+      --primary-strong: #e4bd7a;
+      --ok: #7fc99b;
+      --danger: #d88989;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(201, 164, 106, 0.16), transparent 34rem),
+        linear-gradient(180deg, #111318 0%, #171b22 52%, #101216 100%);
+      color: var(--text);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.65;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 6vw, 4.5rem);
+      letter-spacing: 0;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .date-pill {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      padding: 10px 16px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(27, 32, 40, 0.78);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      color: #17120c;
+      background: var(--primary);
+      cursor: pointer;
+      min-height: 46px;
+      font-weight: 700;
+      transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-strong);
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary {
+      background: var(--panel-soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn.secondary:hover {
+      background: #2b3441;
+    }
+
+    .btn.danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(216, 137, 137, 0.42);
+    }
+
+    .btn.danger:hover {
+      background: rgba(216, 137, 137, 0.11);
+    }
+
+    .settings {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .check-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-chip input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary);
+    }
+
+    .status {
+      margin: 0 0 18px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .task-card {
+      min-height: 230px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(27, 32, 40, 0.9);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+    }
+
+    .task-card.done {
+      border-color: rgba(127, 201, 155, 0.42);
+      background: rgba(31, 57, 44, 0.54);
+    }
+
+    .task-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .task-type {
+      color: var(--primary-strong);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .done-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+
+    .done-box input {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--ok);
+      cursor: pointer;
+    }
+
+    .task-title {
+      margin: 0;
+      font-size: 1.22rem;
+      line-height: 1.28;
+      letter-spacing: 0;
+    }
+
+    .task-detail {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 9px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .notice {
+      border-left: 3px solid var(--primary);
+      padding: 10px 12px;
+      margin: 0;
+      color: var(--muted);
+      background: rgba(201, 164, 106, 0.08);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.92rem;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin: 28px 0 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.28rem;
+      letter-spacing: 0;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(27, 32, 40, 0.72);
+      overflow: hidden;
+    }
+
+    .history-button {
+      width: 100%;
+      border: 0;
+      color: var(--text);
+      background: transparent;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .history-summary {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .history-detail {
+      display: none;
+      padding: 0 16px 16px;
+      color: var(--muted);
+    }
+
+    .history-item.open .history-detail {
+      display: block;
+    }
+
+    .history-detail ul {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    @media (max-width: 1060px) {
+      .grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        width: min(100% - 22px, 680px);
+        padding-top: 26px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .date-pill {
+        justify-self: start;
+        white-space: normal;
+      }
+
+      .toolbar {
+        padding: 14px;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .settings {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .check-chip {
+        width: 100%;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .task-card {
+        min-height: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <h1>明日生活輪盤</h1>
+        <p class="subtitle">今晚抽一次，明天少煩惱</p>
+      </div>
+      <div class="date-pill" id="targetDateText">準備產生明日任務</div>
+    </header>
+
+    <section class="toolbar" aria-label="任務產生與設定">
+      <button class="btn" id="generateBtn" type="button">產生明日任務包</button>
+      <button class="btn secondary" id="rerollBtn" type="button">重新抽籤</button>
+      <button class="btn danger" id="clearBtn" type="button">清除紀錄</button>
+      <div class="settings" aria-label="投資條件">
+        <label class="check-chip">
+          <input id="budgetOk" type="checkbox">
+          本月預算充足
+        </label>
+        <label class="check-chip">
+          <input id="boughtTwice" type="checkbox">
+          本週已買 2 次以上
+        </label>
+        <label class="check-chip">
+          <input id="cashLow" type="checkbox">
+          現金水位偏低
+        </label>
+      </div>
+    </section>
+
+    <p class="status" id="statusText">尚未產生任務包。投資只會產生提醒，不串接券商 API，也不會自動交易。</p>
+
+    <section class="grid" id="taskGrid" aria-label="今日任務卡片區"></section>
+
+    <section>
+      <div class="section-head">
+        <h2>歷史紀錄</h2>
+        <span class="small">最近 14 天</span>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </section>
+  </main>
+
+  <script>
+    // ====== 可修改資料區：權重與輪盤選項集中放在這裡 ======
+    const STORAGE_KEY = "dailyLifeWheel.v1";
+    const HISTORY_LIMIT = 14;
+
+    const wheelData = {
+      exerciseMinutes: [
+        { value: 30, weight: 30 },
+        { value: 45, weight: 45 },
+        { value: 60, weight: 20 },
+        { value: 75, weight: 5 }
+      ],
+      exercisePlanByMinutes: {
+        30: { strength: 20, cardio: 10 },
+        45: { strength: 30, cardio: 15 },
+        60: { strength: 40, cardio: 20 },
+        75: { strength: 50, cardio: 25 }
+      },
+      strengthTypes: [
+        "上半身日：胸、肩、背、手臂",
+        "下半身日：深蹲、臀腿、腿部訓練",
+        "全身日：推、拉、蹲、核心",
+        "核心穩定日：棒式、死蟲、鳥狗、側棒式"
+      ],
+      cardioTypes: ["跑步機快走", "坡度快走", "飛輪／腳踏車", "橢圓機", "間歇有氧"],
+      readingMinutes: [
+        { value: 15, weight: 25 },
+        { value: 30, weight: 45 },
+        { value: 45, weight: 20 },
+        { value: 60, weight: 10 }
+      ],
+      japaneseTasks: [
+        { value: "Podcast 精聽", weight: 45, description: "選一段反覆聽，抓句型與關鍵字" },
+        { value: "考古題", weight: 35, description: "做一小回，重點在檢討錯題" },
+        { value: "混合版", weight: 20, description: "Podcast 15 分鐘＋考古題 15 分鐘" }
+      ],
+      japaneseMinutes: [
+        { value: 15, weight: 20 },
+        { value: 30, weight: 50 },
+        { value: 45, weight: 20 },
+        { value: 60, weight: 10 }
+      ],
+      cleaningMinutes: [
+        { value: 5, weight: 25 },
+        { value: 10, weight: 45 },
+        { value: 15, weight: 20 },
+        { value: 25, weight: 10 }
+      ],
+      cleaningAreas: [
+        "書桌區：桌面、文件、書本、雜物",
+        "地板區：掃地、吸塵、撿雜物",
+        "廚房區：杯盤、流理台、垃圾",
+        "衣物區：衣服歸位、摺衣、洗衣籃",
+        "書櫃區：書本歸位、文件分類",
+        "玄關區：鞋子、鑰匙、包包、外出物",
+        "數位整理：電腦桌面、下載資料夾、手機照片"
+      ],
+      meditationMinutes: [
+        { value: 3, weight: 20 },
+        { value: 5, weight: 40 },
+        { value: 8, weight: 25 },
+        { value: 12, weight: 10 },
+        { value: 15, weight: 5 }
+      ],
+      floatingTasks: [
+        { value: "寫作 500 字", weight: 60 },
+        { value: "投資執行", weight: 40 }
+      ],
+      etfs: [
+        { value: "0056", weight: 30 },
+        { value: "00878", weight: 30 },
+        { value: "00919", weight: 25 },
+        { value: "00929", weight: 15 }
+      ],
+      dramaMinutes: [
+        { value: 30, weight: 40 },
+        { value: 60, weight: 45 },
+        { value: 90, weight: 15 }
+      ],
+      writingTopics: [
+        "法律生活化：用 500 字說明租屋前最該確認的三件事",
+        "法律生活化：寫一篇給朋友看的消費糾紛處理備忘錄",
+        "法律生活化：把存證信函的用途寫成生活故事",
+        "法律生活化：說明借名登記為什麼容易產生風險",
+        "法律生活化：用日常語言解釋什麼是證據保全",
+        "法律生活化：寫一篇關於網路留言界線的短文",
+        "法律生活化：說明簽約前慢看五分鐘的價值",
+        "法律生活化：把交通事故處理流程寫給第一次遇到的人",
+        "親子教育：寫一次孩子讓你重新學會耐心的經驗",
+        "親子教育：用 500 字整理一個陪讀不吵架的方法",
+        "親子教育：寫一篇關於孩子犯錯後如何對話",
+        "親子教育：記錄一個適合家庭晚餐的提問",
+        "親子教育：寫下你希望孩子保留的一種生活能力",
+        "親子教育：從一次陪玩中觀察孩子的個性",
+        "親子教育：寫一篇關於獎勵與界線的短文",
+        "台日文化：比較台灣與日本便利商店的生活感",
+        "台日文化：寫一篇關於日本街道安靜感的觀察",
+        "台日文化：用一個小物件比較台日生活習慣",
+        "台日文化：寫一篇關於旅日時被服務細節打動的經驗",
+        "台日文化：比較台日親子出遊的節奏",
+        "台日文化：寫一篇關於台日飲食禮貌差異的短文",
+        "台日文化：從車站觀察城市秩序",
+        "投資心理：寫下你最容易衝動買進的時刻",
+        "投資心理：用 500 字描述等待比操作更難的原因",
+        "投資心理：寫一篇關於現金水位帶來的安全感",
+        "投資心理：整理一次投資後悔經驗中的訊號",
+        "投資心理：說明為什麼規則能降低情緒成本",
+        "投資心理：寫下你對配息的期待與盲點",
+        "投資心理：記錄一次沒有出手反而正確的經驗",
+        "律師日常：寫一篇關於開庭前十分鐘的心情",
+        "律師日常：描述一次把複雜問題講簡單的練習",
+        "律師日常：寫下與當事人溝通時最重要的一件事",
+        "律師日常：記錄一天中最需要專注的工作片段",
+        "律師日常：寫一篇關於法律工作中的同理心",
+        "律師日常：把一次文件整理寫成工作方法",
+        "律師日常：說明你如何判斷案件的真正問題",
+        "攝影與生活：寫一篇關於光線改變心情的觀察",
+        "攝影與生活：用 500 字描述一張你想拍卻沒拍的照片",
+        "攝影與生活：寫下街拍時你會注意的三個細節",
+        "攝影與生活：把家庭日常寫成一張照片的構圖",
+        "攝影與生活：描述一次用相機讓自己慢下來的經驗",
+        "攝影與生活：寫一篇關於整理照片時看見的時間感",
+        "攝影與生活：用一個顏色寫一篇生活短文",
+        "自我管理：寫下明天最想守住的一個節奏",
+        "自我管理：整理一個降低決策疲勞的小規則",
+        "自我管理：寫一篇關於睡前儀式的短文",
+        "自我管理：描述一次你成功停止拖延的經驗",
+        "自我管理：用 500 字設計一個低摩擦早晨",
+        "自我管理：寫下你最近最值得保留的習慣",
+        "自我管理：檢討一個讓自己太累的安排",
+        "自我管理：寫一篇關於少做一點反而更穩的短文"
+      ]
+    };
+
+    const taskGrid = document.querySelector("#taskGrid");
+    const historyList = document.querySelector("#historyList");
+    const statusText = document.querySelector("#statusText");
+    const targetDateText = document.querySelector("#targetDateText");
+    const generateBtn = document.querySelector("#generateBtn");
+    const rerollBtn = document.querySelector("#rerollBtn");
+    const clearBtn = document.querySelector("#clearBtn");
+    const budgetOk = document.querySelector("#budgetOk");
+    const boughtTwice = document.querySelector("#boughtTwice");
+    const cashLow = document.querySelector("#cashLow");
+
+    function loadState() {
+      const emptyState = { current: null, history: [], settings: { budgetOk: false, boughtTwice: false, cashLow: false } };
+      try {
+        return { ...emptyState, ...JSON.parse(localStorage.getItem(STORAGE_KEY)) };
+      } catch (error) {
+        return emptyState;
+      }
+    }
+
+    function saveState(nextState) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    }
+
+    function weightedPick(items) {
+      const total = items.reduce((sum, item) => sum + item.weight, 0);
+      let cursor = Math.random() * total;
+      for (const item of items) {
+        cursor -= item.weight;
+        if (cursor <= 0) return item;
+      }
+      return items[items.length - 1];
+    }
+
+    function randomPick(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function isoDate(offsetDays = 0) {
+      const date = new Date();
+      date.setHours(12, 0, 0, 0);
+      date.setDate(date.getDate() + offsetDays);
+      return date.toISOString().slice(0, 10);
+    }
+
+    function formatDate(dateString) {
+      return new Intl.DateTimeFormat("zh-TW", {
+        month: "long",
+        day: "numeric",
+        weekday: "long"
+      }).format(new Date(`${dateString}T12:00:00`));
+    }
+
+    function readSettings() {
+      return {
+        budgetOk: budgetOk.checked,
+        boughtTwice: boughtTwice.checked,
+        cashLow: cashLow.checked
+      };
+    }
+
+    function applySettings(settings) {
+      budgetOk.checked = Boolean(settings.budgetOk);
+      boughtTwice.checked = Boolean(settings.boughtTwice);
+      cashLow.checked = Boolean(settings.cashLow);
+    }
+
+    function buildInvestmentTask(settings) {
+      const etf = weightedPick(wheelData.etfs).value;
+      const shouldPause = settings.boughtTwice || settings.cashLow;
+      const shares = settings.budgetOk ? 2 : 1;
+
+      return {
+        title: shouldPause ? "投資觀察日" : `投資執行：${etf}`,
+        detail: shouldPause
+          ? "今日暫停買進，只做觀察。原因可能是本週已買 2 次以上或現金水位偏低。"
+          : `提醒：${etf}，買 ${shares} 張。執行前仍需自行確認價格、資金與風險。`,
+        tags: shouldPause ? ["暫停買進", `原抽中 ${etf}`] : [`ETF ${etf}`, `買 ${shares} 張`],
+        notice: "本工具只負責降低決策疲勞，不構成投資建議，也不會自動交易。"
+      };
+    }
+
+    function generatePackage() {
+      const settings = readSettings();
+      const tomorrow = isoDate(1);
+      const exerciseMinutes = weightedPick(wheelData.exerciseMinutes).value;
+      const exercisePlan = wheelData.exercisePlanByMinutes[exerciseMinutes];
+      const japanese = weightedPick(wheelData.japaneseTasks);
+      const floating = weightedPick(wheelData.floatingTasks).value;
+      const floatingPayload = floating === "寫作 500 字"
+        ? {
+            title: "寫作 500 字",
+            detail: randomPick(wheelData.writingTopics),
+            tags: ["浮動任務", "500 字短文"]
+          }
+        : buildInvestmentTask(settings);
+
+      const tasks = [
+        {
+          id: "exercise",
+          type: "固定任務",
+          title: `運動 ${exerciseMinutes} 分鐘`,
+          detail: `${randomPick(wheelData.strengthTypes)}；${randomPick(wheelData.cardioTypes)}`,
+          tags: [`無氧 ${exercisePlan.strength} 分鐘`, `有氧 ${exercisePlan.cardio} 分鐘`]
+        },
+        {
+          id: "reading",
+          type: "固定任務",
+          title: `閱讀 ${weightedPick(wheelData.readingMinutes).value} 分鐘`,
+          detail: "從現有 Kobo 與實體書中選一本最容易開始的書。",
+          tags: ["只決定時間", "降低開始成本"]
+        },
+        {
+          id: "japanese",
+          type: "固定任務",
+          title: `日語：${japanese.value}`,
+          detail: japanese.description,
+          tags: [`${weightedPick(wheelData.japaneseMinutes).value} 分鐘`]
+        },
+        {
+          id: "cleaning",
+          type: "固定任務",
+          title: `打掃 ${weightedPick(wheelData.cleaningMinutes).value} 分鐘`,
+          detail: randomPick(wheelData.cleaningAreas),
+          tags: ["只處理一區"]
+        },
+        {
+          id: "meditation",
+          type: "固定任務",
+          title: `靜坐冥想 ${weightedPick(wheelData.meditationMinutes).value} 分鐘`,
+          detail: "坐好，注意呼吸。分心時不責備自己，只把注意力帶回呼吸。",
+          tags: ["呼吸", "回到當下"]
+        },
+        {
+          id: "floating",
+          type: "浮動任務",
+          ...floatingPayload
+        },
+        {
+          id: "drama",
+          type: "獎勵任務",
+          title: `追劇 ${weightedPick(wheelData.dramaMinutes).value} 分鐘`,
+          detail: "完成主要任務後再享用，讓獎勵更有儀式感。",
+          tags: ["獎勵", "放鬆"]
+        }
+      ].map(task => ({ ...task, done: false }));
+
+      const state = loadState();
+      const packageData = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: tomorrow,
+        createdAt: new Date().toISOString(),
+        settings,
+        tasks
+      };
+
+      const history = [packageData, ...state.history.filter(item => item.date !== tomorrow)].slice(0, HISTORY_LIMIT);
+      saveState({ current: packageData, history, settings });
+      render();
+    }
+
+    function updateTaskDone(taskId, done) {
+      const state = loadState();
+      if (!state.current) return;
+
+      state.current.tasks = state.current.tasks.map(task => task.id === taskId ? { ...task, done } : task);
+      state.history = [state.current, ...state.history.filter(item => item.id !== state.current.id && item.date !== state.current.date)]
+        .slice(0, HISTORY_LIMIT);
+      saveState(state);
+      render();
+    }
+
+    function persistSettings() {
+      const state = loadState();
+      state.settings = readSettings();
+      saveState(state);
+    }
+
+    function renderTasks(current) {
+      if (!current) {
+        taskGrid.innerHTML = `<div class="empty" style="grid-column: 1 / -1;">按下「產生明日任務包」，今晚就把明天的決策先收好。</div>`;
+        return;
+      }
+
+      taskGrid.innerHTML = current.tasks.map(task => `
+        <article class="task-card ${task.done ? "done" : ""}">
+          <div class="task-top">
+            <div class="task-type">${task.type}</div>
+            <label class="done-box" title="標記完成">
+              <input type="checkbox" data-task-done="${task.id}" ${task.done ? "checked" : ""} aria-label="${task.title}完成狀態">
+            </label>
+          </div>
+          <h3 class="task-title">${task.title}</h3>
+          <p class="task-detail">${task.detail}</p>
+          ${task.notice ? `<p class="notice">${task.notice}</p>` : ""}
+          <div class="meta">${task.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+        </article>
+      `).join("");
+
+      taskGrid.querySelectorAll("[data-task-done]").forEach(input => {
+        input.addEventListener("change", event => updateTaskDone(event.target.dataset.taskDone, event.target.checked));
+      });
+    }
+
+    function renderHistory(history) {
+      if (!history.length) {
+        historyList.innerHTML = `<div class="empty">目前沒有歷史紀錄。</div>`;
+        return;
+      }
+
+      historyList.innerHTML = history.map(item => {
+        const doneCount = item.tasks.filter(task => task.done).length;
+        const summary = item.tasks.map(task => task.title).join("｜");
+        return `
+          <article class="history-item">
+            <button class="history-button" type="button">
+              <span>
+                <strong>${formatDate(item.date)}</strong><br>
+                <span class="history-summary">${doneCount}/${item.tasks.length} 完成</span>
+              </span>
+              <span class="small">展開</span>
+            </button>
+            <div class="history-detail">
+              <ul>
+                ${item.tasks.map(task => `<li>${task.done ? "✓" : "□"} ${task.title}：${task.detail}</li>`).join("")}
+              </ul>
+              <p class="small">${summary}</p>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      historyList.querySelectorAll(".history-button").forEach(button => {
+        button.addEventListener("click", () => button.closest(".history-item").classList.toggle("open"));
+      });
+    }
+
+    function render() {
+      const state = loadState();
+      applySettings(state.settings || {});
+      targetDateText.textContent = `目標日：${formatDate(isoDate(1))}`;
+
+      if (state.current) {
+        const doneCount = state.current.tasks.filter(task => task.done).length;
+        statusText.textContent = `目前顯示 ${formatDate(state.current.date)} 的任務包，完成進度 ${doneCount}/${state.current.tasks.length}。`;
+      } else {
+        statusText.textContent = "尚未產生任務包。投資只會產生提醒，不串接券商 API，也不會自動交易。";
+      }
+
+      renderTasks(state.current);
+      renderHistory(state.history || []);
+    }
+
+    generateBtn.addEventListener("click", generatePackage);
+    rerollBtn.addEventListener("click", generatePackage);
+    clearBtn.addEventListener("click", () => {
+      if (!confirm("確定要清除目前任務與最近 14 天歷史紀錄嗎？")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      applySettings({});
+      render();
+    });
+
+    [budgetOk, boughtTwice, cashLow].forEach(input => {
+      input.addEventListener("change", persistSettings);
+    });
+
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("./sw.js").catch(() => {
+        // 靜態部署環境若不支援 service worker，頁面仍可正常使用。
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
