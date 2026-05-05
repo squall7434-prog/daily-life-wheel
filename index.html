@@ -138,6 +138,39 @@
       margin-left: auto;
     }
 
+    .day-type {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .day-type label {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 7px 13px;
+      border-radius: 7px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .day-type input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .day-type label:has(input:checked) {
+      background: var(--primary);
+      color: #17120c;
+      font-weight: 700;
+    }
+
     .check-chip {
       display: inline-flex;
       align-items: center;
@@ -165,7 +198,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 26px;
     }
@@ -325,6 +358,28 @@
       padding-left: 1.1rem;
     }
 
+    .history-checks {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
+    .history-checks label {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .history-checks input {
+      width: 16px;
+      height: 16px;
+      margin-top: 4px;
+      accent-color: var(--ok);
+    }
+
     .empty {
       border: 1px dashed var(--line);
       border-radius: 8px;
@@ -369,6 +424,15 @@
         margin-left: 0;
       }
 
+      .day-type {
+        width: 100%;
+      }
+
+      .day-type label {
+        flex: 1;
+        justify-content: center;
+      }
+
       .check-chip {
         width: 100%;
       }
@@ -397,6 +461,16 @@
       <button class="btn" id="generateBtn" type="button">產生明日任務包</button>
       <button class="btn secondary" id="rerollBtn" type="button">重新抽籤</button>
       <button class="btn danger" id="clearBtn" type="button">清除紀錄</button>
+      <div class="day-type" aria-label="任務日型">
+        <label>
+          <input name="dayType" value="weekday" type="radio" checked>
+          平日
+        </label>
+        <label>
+          <input name="dayType" value="holiday" type="radio">
+          假日
+        </label>
+      </div>
       <div class="settings" aria-label="投資條件">
         <label class="check-chip">
           <input id="budgetOk" type="checkbox">
@@ -432,6 +506,79 @@
     const HISTORY_LIMIT = 14;
 
     const wheelData = {
+      dayProfiles: {
+        weekday: {
+          label: "平日",
+          exerciseMinutes: [
+            { value: 30, weight: 35 },
+            { value: 45, weight: 45 },
+            { value: 60, weight: 17 },
+            { value: 75, weight: 3 }
+          ],
+          readingMinutes: [
+            { value: 15, weight: 30 },
+            { value: 30, weight: 45 },
+            { value: 45, weight: 18 },
+            { value: 60, weight: 7 }
+          ],
+          japaneseMinutes: [
+            { value: 15, weight: 22 },
+            { value: 30, weight: 52 },
+            { value: 45, weight: 18 },
+            { value: 60, weight: 8 }
+          ],
+          cleaningMinutes: [
+            { value: 5, weight: 30 },
+            { value: 10, weight: 45 },
+            { value: 15, weight: 18 },
+            { value: 25, weight: 7 }
+          ],
+          dramaMinutes: [
+            { value: 30, weight: 45 },
+            { value: 60, weight: 45 },
+            { value: 90, weight: 10 }
+          ],
+          floatingTasks: [
+            { value: "寫作 500 字", weight: 60 },
+            { value: "投資執行", weight: 40 }
+          ]
+        },
+        holiday: {
+          label: "假日",
+          exerciseMinutes: [
+            { value: 30, weight: 18 },
+            { value: 45, weight: 42 },
+            { value: 60, weight: 30 },
+            { value: 75, weight: 10 }
+          ],
+          readingMinutes: [
+            { value: 15, weight: 12 },
+            { value: 30, weight: 38 },
+            { value: 45, weight: 30 },
+            { value: 60, weight: 20 }
+          ],
+          japaneseMinutes: [
+            { value: 15, weight: 15 },
+            { value: 30, weight: 45 },
+            { value: 45, weight: 25 },
+            { value: 60, weight: 15 }
+          ],
+          cleaningMinutes: [
+            { value: 5, weight: 15 },
+            { value: 10, weight: 35 },
+            { value: 15, weight: 30 },
+            { value: 25, weight: 20 }
+          ],
+          dramaMinutes: [
+            { value: 30, weight: 25 },
+            { value: 60, weight: 50 },
+            { value: 90, weight: 25 }
+          ],
+          floatingTasks: [
+            { value: "寫作 500 字", weight: 100 }
+          ]
+        }
+      },
       exerciseMinutes: [
         { value: 30, weight: 30 },
         { value: 45, weight: 45 },
@@ -467,6 +614,10 @@
         { value: 30, weight: 50 },
         { value: 45, weight: 20 },
         { value: 60, weight: 10 }
+      ],
+      englishTasks: [
+        "養烏龜 3 個田",
+        "托益寫考題一回"
       ],
       cleaningMinutes: [
         { value: 5, weight: 25 },
@@ -567,14 +718,24 @@
     const generateBtn = document.querySelector("#generateBtn");
     const rerollBtn = document.querySelector("#rerollBtn");
     const clearBtn = document.querySelector("#clearBtn");
+    const dayTypeInputs = document.querySelectorAll("input[name='dayType']");
     const budgetOk = document.querySelector("#budgetOk");
     const boughtTwice = document.querySelector("#boughtTwice");
     const cashLow = document.querySelector("#cashLow");
 
     function loadState() {
-      const emptyState = { current: null, history: [], settings: { budgetOk: false, boughtTwice: false, cashLow: false } };
+      const emptyState = {
+        current: null,
+        history: [],
+        settings: { dayType: "weekday", budgetOk: false, boughtTwice: false, cashLow: false }
+      };
       try {
-        return { ...emptyState, ...JSON.parse(localStorage.getItem(STORAGE_KEY)) };
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return {
+          ...emptyState,
+          ...stored,
+          settings: { ...emptyState.settings, ...(stored && stored.settings ? stored.settings : {}) }
+        };
       } catch (error) {
         return emptyState;
       }
@@ -614,7 +775,9 @@
     }
 
     function readSettings() {
+      const checkedDayType = document.querySelector("input[name='dayType']:checked");
       return {
+        dayType: checkedDayType ? checkedDayType.value : "weekday",
         budgetOk: budgetOk.checked,
         boughtTwice: boughtTwice.checked,
         cashLow: cashLow.checked
@@ -622,9 +785,22 @@
     }
 
     function applySettings(settings) {
+      const dayType = settings.dayType || "weekday";
+      dayTypeInputs.forEach(input => {
+        input.checked = input.value === dayType;
+      });
       budgetOk.checked = Boolean(settings.budgetOk);
       boughtTwice.checked = Boolean(settings.boughtTwice);
       cashLow.checked = Boolean(settings.cashLow);
+    }
+
+    function profileFor(dayType) {
+      return wheelData.dayProfiles[dayType] || wheelData.dayProfiles.weekday;
+    }
+
+    function weightedFor(dayType, key) {
+      const profile = profileFor(dayType);
+      return weightedPick(profile[key] || wheelData[key]);
     }
 
     function buildInvestmentTask(settings) {
@@ -644,16 +820,18 @@
 
     function generatePackage() {
       const settings = readSettings();
+      const dayType = settings.dayType || "weekday";
+      const dayProfile = profileFor(dayType);
       const tomorrow = isoDate(1);
-      const exerciseMinutes = weightedPick(wheelData.exerciseMinutes).value;
+      const exerciseMinutes = weightedFor(dayType, "exerciseMinutes").value;
       const exercisePlan = wheelData.exercisePlanByMinutes[exerciseMinutes];
       const japanese = weightedPick(wheelData.japaneseTasks);
-      const floating = weightedPick(wheelData.floatingTasks).value;
+      const floating = weightedFor(dayType, "floatingTasks").value;
       const floatingPayload = floating === "寫作 500 字"
         ? {
             title: "寫作 500 字",
             detail: randomPick(wheelData.writingTopics),
-            tags: ["浮動任務", "500 字短文"]
+            tags: dayType === "holiday" ? ["假日浮動", "500 字短文", "假日不抽投資"] : ["浮動任務", "500 字短文"]
           }
         : buildInvestmentTask(settings);
 
@@ -668,7 +846,7 @@
         {
           id: "reading",
           type: "固定任務",
-          title: `閱讀 ${weightedPick(wheelData.readingMinutes).value} 分鐘`,
+          title: `閱讀 ${weightedFor(dayType, "readingMinutes").value} 分鐘`,
           detail: "從現有 Kobo 與實體書中選一本最容易開始的書。",
           tags: ["只決定時間", "降低開始成本"]
         },
@@ -677,12 +855,19 @@
           type: "固定任務",
           title: `日語：${japanese.value}`,
           detail: japanese.description,
-          tags: [`${weightedPick(wheelData.japaneseMinutes).value} 分鐘`]
+          tags: [`${weightedFor(dayType, "japaneseMinutes").value} 分鐘`]
+        },
+        {
+          id: "english",
+          type: "固定任務",
+          title: "英語學習",
+          detail: randomPick(wheelData.englishTasks),
+          tags: ["英文", "隨機任務"]
         },
         {
           id: "cleaning",
           type: "固定任務",
-          title: `打掃 ${weightedPick(wheelData.cleaningMinutes).value} 分鐘`,
+          title: `打掃 ${weightedFor(dayType, "cleaningMinutes").value} 分鐘`,
           detail: randomPick(wheelData.cleaningAreas),
           tags: ["只處理一區"]
         },
@@ -701,7 +886,7 @@
         {
           id: "drama",
           type: "獎勵任務",
-          title: `追劇 ${weightedPick(wheelData.dramaMinutes).value} 分鐘`,
+          title: `追劇 ${weightedFor(dayType, "dramaMinutes").value} 分鐘`,
           detail: "完成主要任務後再享用，讓獎勵更有儀式感。",
           tags: ["獎勵", "放鬆"]
         }
@@ -711,6 +896,8 @@
       const packageData = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         date: tomorrow,
+        dayType,
+        dayTypeLabel: dayProfile.label,
         createdAt: new Date().toISOString(),
         settings,
         tasks
@@ -728,6 +915,25 @@
       state.current.tasks = state.current.tasks.map(task => task.id === taskId ? { ...task, done } : task);
       state.history = [state.current, ...state.history.filter(item => item.id !== state.current.id && item.date !== state.current.date)]
         .slice(0, HISTORY_LIMIT);
+      saveState(state);
+      render();
+    }
+
+    function updateHistoryTaskDone(packageId, taskId, done) {
+      const state = loadState();
+      state.history = (state.history || []).map(item => {
+        if (item.id !== packageId) return item;
+        return {
+          ...item,
+          tasks: item.tasks.map(task => task.id === taskId ? { ...task, done } : task)
+        };
+      });
+
+      if (state.current && state.current.id === packageId) {
+        const updatedCurrent = state.history.find(item => item.id === packageId);
+        if (updatedCurrent) state.current = updatedCurrent;
+      }
+
       saveState(state);
       render();
     }
@@ -773,19 +979,25 @@
       historyList.innerHTML = history.map(item => {
         const doneCount = item.tasks.filter(task => task.done).length;
         const summary = item.tasks.map(task => task.title).join("｜");
+        const dayLabel = item.dayTypeLabel || profileFor(item.dayType || "weekday").label;
         return `
           <article class="history-item">
             <button class="history-button" type="button">
               <span>
                 <strong>${formatDate(item.date)}</strong><br>
-                <span class="history-summary">${doneCount}/${item.tasks.length} 完成</span>
+                <span class="history-summary">${dayLabel}｜${doneCount}/${item.tasks.length} 完成</span>
               </span>
               <span class="small">展開</span>
             </button>
             <div class="history-detail">
-              <ul>
-                ${item.tasks.map(task => `<li>${task.done ? "✓" : "□"} ${task.title}：${task.detail}</li>`).join("")}
-              </ul>
+              <div class="history-checks">
+                ${item.tasks.map(task => `
+                  <label>
+                    <input type="checkbox" data-history-package="${item.id}" data-history-task="${task.id}" ${task.done ? "checked" : ""}>
+                    <span>${task.title}：${task.detail}</span>
+                  </label>
+                `).join("")}
+              </div>
               <p class="small">${summary}</p>
             </div>
           </article>
@@ -794,6 +1006,16 @@
 
       historyList.querySelectorAll(".history-button").forEach(button => {
         button.addEventListener("click", () => button.closest(".history-item").classList.toggle("open"));
+      });
+
+      historyList.querySelectorAll("[data-history-package]").forEach(input => {
+        input.addEventListener("change", event => {
+          updateHistoryTaskDone(
+            event.target.dataset.historyPackage,
+            event.target.dataset.historyTask,
+            event.target.checked
+          );
+        });
       });
     }
 
@@ -804,7 +1026,8 @@
 
       if (state.current) {
         const doneCount = state.current.tasks.filter(task => task.done).length;
-        statusText.textContent = `目前顯示 ${formatDate(state.current.date)} 的任務包，完成進度 ${doneCount}/${state.current.tasks.length}。`;
+        const dayLabel = state.current.dayTypeLabel || profileFor(state.current.dayType || "weekday").label;
+        statusText.textContent = `目前顯示 ${formatDate(state.current.date)} 的${dayLabel}任務包，完成進度 ${doneCount}/${state.current.tasks.length}。`;
       } else {
         statusText.textContent = "尚未產生任務包。投資只會產生提醒，不串接券商 API，也不會自動交易。";
       }
@@ -822,7 +1045,7 @@
       render();
     });
 
-    [budgetOk, boughtTwice, cashLow].forEach(input => {
+    [...dayTypeInputs, budgetOk, boughtTwice, cashLow].forEach(input => {
       input.addEventListener("change", persistSettings);
     });
 
